@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>일기장</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect x='66' y='26' width='148' height='200' rx='12' fill='%23ece2cc'/%3E%3Crect x='44' y='20' width='160' height='208' rx='14' fill='%238b4a30'/%3E%3Crect x='44' y='20' width='26' height='208' rx='14' fill='%23703824'/%3E%3Crect x='84' y='66' width='88' height='50' rx='8' fill='%23fbf7ee'/%3E%3Cpath d='M96 84h64M96 98h64' stroke='%23b4553c' stroke-width='5'/%3E%3Crect x='180' y='20' width='12' height='208' fill='%23321f1c'/%3E%3Cpath d='M118 228v22l10-9 10 9v-22z' fill='%23c83c37'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --desk: #d8ccb4;
+  --desk-2: #cbbda0;
+  --paper: #fbf7ee;
+  --paper-edge: #efe7d6;
+  --ink: #2b2a33;
+  --pencil: #3b4a7a;
+  --muted: #8f8573;
+  --rule: #d6dfe9;
+  --margin: #e9a3a3;
+  --accent: #b4553c;
+  --line: 36px;
+  --hand: "Nanum Pen Script", "Gaegu", cursive;
+  --serif: "Gowun Batang", "Batang", serif;
+}
+body.evening { --desk: #1f2536; --desk-2: #2a3147; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, var(--desk-2, #cbbda0), var(--desk) 70%);
+  background-color: var(--desk);
+  color: var(--ink);
+  font-family: var(--serif);
+  transition: background-color .6s;
+  padding: 32px 16px 120px;
+}
+
+/* 공책 */
+.book {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--paper);
+  border-radius: 6px 14px 14px 6px;
+  box-shadow: 0 1px 0 var(--paper-edge), 0 3px 0 #e6dcc8, 0 5px 0 #ddd2bc, 0 18px 40px rgba(0,0,0,.25);
+  padding: 40px 48px 56px 88px;
+}
+.book::before { /* 왼쪽 여백 빨간 줄 */
+  content: ""; position: absolute; top: 0; bottom: 0; left: 64px;
+  border-left: 2px solid var(--margin); opacity: .7;
+}
+.holes { position: absolute; left: 20px; top: 40px; bottom: 40px; display: flex; flex-direction: column; justify-content: space-around; }
+.holes span { width: 16px; height: 16px; border-radius: 50%; background: var(--desk); box-shadow: inset 0 2px 3px rgba(0,0,0,.35); }
+
+/* 머리말 */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.datebox { display: flex; align-items: center; gap: 6px; }
+.datebox button { border: 0; background: none; font-size: 22px; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+.datebox button:hover { background: rgba(0,0,0,.05); color: var(--ink); }
+#dateLabel { font-family: var(--serif); font-weight: 700; font-size: 20px; cursor: pointer; border-bottom: 1px dashed transparent; }
+#dateLabel:hover { border-bottom-color: var(--muted); }
+#dateInput { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+.tabs { display: flex; background: #f1eadb; border-radius: 999px; padding: 3px; }
+.tabs button { border: 0; background: none; font-family: var(--serif); font-size: 14px; padding: 6px 14px; border-radius: 999px; cursor: pointer; color: var(--muted); }
+.tabs button.on { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 700; }
+
+.greet { font-family: var(--hand); font-size: 30px; color: var(--muted); min-height: var(--line); margin: 18px 0 6px; }
+
+/* 질문 */
+section.q { margin-top: 26px; }
+section.q h2 {
+  font-family: var(--serif); font-size: 18px; font-weight: 700; margin: 0 0 4px;
+  min-height: 28px; color: var(--accent);
+}
+.caret::after { content: "▍"; color: var(--accent); animation: blink 1s steps(1) infinite; margin-left: 1px; }
+@keyframes blink { 50% { opacity: 0; } }
+.item { display: grid; grid-template-columns: 30px 1fr; align-items: start; }
+.item .num { font-family: var(--hand); font-size: 28px; line-height: var(--line); color: var(--muted); }
+textarea {
+  width: 100%; border: 0; outline: none; resize: none; overflow: hidden;
+  font-family: var(--hand); font-size: 28px; line-height: var(--line); color: var(--pencil);
+  padding: 0; margin: 0; min-height: var(--line); display: block;
+  background: transparent repeating-linear-gradient(to bottom,
+    transparent 0, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
+  background-attachment: local;
+  caret-color: var(--accent);
+}
+textarea::placeholder { color: #c9c0ae; }
+textarea.memo { min-height: calc(var(--line) * 4); }
+.more {
+  border: 0; background: none; cursor: pointer; margin: 2px 0 0 30px; padding: 2px 6px; border-radius: 6px;
+  font-family: var(--hand); font-size: 22px; color: var(--muted);
+}
+.more:hover { background: rgba(0,0,0,.05); color: var(--accent); }
+
+.fade { opacity: 0; transform: translateY(4px); transition: opacity .35s, transform .35s; }
+.fade.in { opacity: 1; transform: none; }
+
+/* 저장 도장 */
+.stamp {
+  position: absolute; right: 40px; top: 90px; transform: rotate(-12deg) scale(1.6);
+  border: 3px solid var(--accent); color: var(--accent); border-radius: 8px;
+  font-family: var(--serif); font-weight: 700; font-size: 18px; padding: 4px 12px;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .25s;
+}
+.stamp.show { opacity: .85; transform: rotate(-12deg) scale(1); }
+
+/* 아래 막대 */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+  padding: 12px 16px; background: rgba(251,247,238,.94); backdrop-filter: blur(6px);
+  border-top: 1px solid #e3d9c4; font-size: 13px; color: var(--muted);
+}
+.bar button {
+  font-family: var(--serif); font-size: 14px; border-radius: 8px; cursor: pointer; padding: 8px 14px;
+  border: 1px solid #d8ccb4; background: var(--paper); color: var(--ink);
+}
+.bar button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; padding: 8px 22px; }
+.bar button:hover { filter: brightness(.97); }
+#status.err { color: #b3261e; }
+kbd { font-family: inherit; border: 1px solid #d8ccb4; border-radius: 4px; padding: 0 4px; background: #fff; }
+
+@media (max-width: 600px) {
+  body { padding: 12px 8px 140px; }
+  .book { padding: 28px 18px 40px 48px; }
+  .book::before { left: 36px; }
+  .holes { left: 10px; }
+  .holes span { width: 12px; height: 12px; }
+  .stamp { right: 16px; }
+}
+</style>
+</head>
+<body>
+<main class="book">
+  <div class="holes"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="top">
+    <div class="datebox">
+      <button id="prev" title="전날">‹</button>
+      <span id="dateLabel" title="날짜 고르기"></span>
+      <input type="date" id="dateInput">
+      <button id="next" title="다음날">›</button>
+    </div>
+    <div class="tabs">
+      <button data-mode="morning">아침 일기</button>
+      <button data-mode="evening">저녁 일기</button>
+    </div>
+  </div>
+  <div class="greet" id="greet"></div>
+  <div id="form"></div>
+  <div class="stamp" id="stamp">저장 완료</div>
+</main>
+
+<div class="bar">
+  <span id="folder">저장 폴더: 아직 안 고름</span>
+  <button id="pick">폴더 고르기</button>
+  <button id="save" class="primary">저장</button>
+  <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span>
+  <span id="status"></span>
+</div>
+
+<script>
+// 질문 목록. h는 md 파일의 제목(## h)이다. 제목을 바꾸면 이전 일기의 그 항목은 앱에서 불러오지 않는다.
+const QUESTIONS = {
+  morning: [
+    { h: "감사한 일", q: "오늘 하루 감사한 일 3가지는?" },
+    { h: "오늘 하루를 좋게 하기 위해서", q: "오늘 하루를 좋게 하기 위해서 할 일 3가지는?" },
+  ],
+  evening: [
+    { h: "굉장한 일", q: "오늘 하루 있었던 굉장한 일 3가지는?" },
+    { h: "아쉬운 일", q: "오늘 하루 있었던 아쉬웠던 일 3가지는?" },
+  ],
+};
+const MEMO = "메모";
+const TOPICS = ["감사", "굉장한 일", "아쉬운 일", "오늘 하루를 좋게 하기 위해"];  // 매일 노트에서 [[주제]]로 링크해 Obsidian 그래프에서 이어지게 한다
+const COUNT = 3;
+const GREET = { morning: "좋은 아침! 오늘은 어떤 하루가 될까.", evening: "오늘 하루도 수고했어. 천천히 돌아보자." };
+const DAYS = "일월화수목금토";
+
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const korDate = d => `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${DAYS[d.getDay()]}요일`;
+// 달마다 폴더(26.10)를 두고, 파일 이름은 YYYY-MM-DD.md로 한다.
+const monthDir = d => `${String(d.getFullYear()).slice(2)}.${pad(d.getMonth() + 1)}`;
+const fileName = d => `${iso(d)}.md`;
+
+let root = null;      // 일기 폴더 핸들
+let date, mode;
+let dirty = false;
+let typingToken = 0;
+
+// ---------- md 읽고 쓰기 ----------
+// 전날·다음날, 이달 노트(26.10), 주제 노트로 가는 링크 줄
+function navLine(d) {
+  const p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  const n = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  return `« [[${iso(p)}|전날]] · [[${monthDir(d)}]] · ${TOPICS.map(t => `[[${t}]]`).join(" · ")} ·[[${iso(n)}|다음날]] »`;
+}
+function ensureNav(text, d) {
+  const ls = text.split("\n");
+  const i = ls.findIndex(l => l.startsWith("« "));
+  if (i >= 0) ls[i] = navLine(d);
+  else {
+    const fmEnd = ls[0] === "---" ? ls.indexOf("---", 1) : -1;
+    ls.splice(fmEnd + 1, 0, navLine(d), "");
+  }
+  return ls.join("\n");
+}
+function skeleton(d) {
+  return [
+    "---", `date: ${iso(d)}`, "tags:", "  - daily", "---",
+    navLine(d), "",
+    `# ${korDate(d)}`, "",
+    "# 아침 일기", ...QUESTIONS.morning.flatMap(x => ["## " + x.h, ""]),
+    "# 저녁 일기", ...QUESTIONS.evening.flatMap(x => ["## " + x.h, ""]),
+    "## " + MEMO, "", "",
+  ].join("\n");
+}
+const isHeading = l => /^#{1,2}\s/.test(l);
+function findSection(lines, h) {
+  const start = lines.findIndex(l => l.trim() === "## " + h);
+  if (start < 0) return null;
+  let end = start + 1;
+  while (end < lines.length && !isHeading(lines[end])) end++;
+  return [start, end];
+}
+function readItems(body) {
+  return body.join("\n").split(/^\d+\.\s?/m).slice(1)
+    .map(t => t.split("\n").map(l => l.replace(/^ {3}/, "")).join("\n").trim());
+}
+function itemLines(items) {
+  return items.flatMap((t, i) => t.split("\n").map((l, j) => (j ? "   " : `${i + 1}. `) + l));
+}
+function parse(text) {
+  const lines = text.split("\n"), out = {};
+  for (const { h } of [...QUESTIONS.morning, ...QUESTIONS.evening]) {
+    const r = findSection(lines, h);
+    out[h] = r ? readItems(lines.slice(r[0] + 1, r[1])) : [];
+  }
+  const r = findSection(lines, MEMO);
+  out[MEMO] = r ? lines.slice(r[0] + 1, r[1]).join("\n").trim() : "";
+  return out;
+}
+function apply(text, answers) {
+  const ls = text.split("\n");
+  for (const [h, val] of Object.entries(answers)) {
+    const body = h === MEMO ? (val ? val.split("\n") : []) : itemLines(val);
+    let r = findSection(ls, h);
+    if (!r) {
+      const m = h === MEMO ? null : findSection(ls, MEMO);
+      const at = m ? m[0] : ls.length;
+      ls.splice(at, 0, "## " + h, "");
+      r = [at, at + 1];
+    }
+    ls.splice(r[0] + 1, r[1] - r[0] - 1, "", ...body, ...(body.length ? [""] : []));
+  }
+  return ls.join("\n");
+}
+
+// ---------- 폴더 핸들 보관 (IndexedDB) ----------
+function db() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("diary", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function kv(key, val) {
+  try {
+    const d = await db();
+    return await new Promise((res, rej) => {
+      const t = d.transaction("kv", val === undefined ? "readonly" : "readwrite").objectStore("kv");
+      const r = val === undefined ? t.get(key) : t.put(val, key);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  } catch { return undefined; }
+}
+async function hasPermission(ask) {
+  if (!root) return false;
+  const opt = { mode: "readwrite" };
+  if (await root.queryPermission(opt) === "granted") return true;
+  return ask && await root.requestPermission(opt) === "granted";
+}
+const isMonthDir = h => /^\d{2}\.\d{2}$/.test(h.name);
+async function pickFolder() {
+  try {
+    const h = await window.showDirectoryPicker({ id: "diary", mode: "readwrite" });
+    if (isMonthDir(h)) { setStatus(`'${h.name}' 같은 달 폴더 말고, 그 바깥 폴더를 골라 주세요`, true); return false; }
+    root = h;
+    await kv("root", root);
+    showFolder();
+    return true;
+  } catch { return false; }
+}
+function showFolder() {
+  $("#folder").textContent = root ? `저장 폴더: ${root.name}/${monthDir(date)}/${fileName(date)}` : "저장 폴더: 아직 안 고름";
+}
+async function ensureNote(dir, name, body) {
+  try { await dir.getFileHandle(name); }
+  catch {
+    const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+    await w.write(body); await w.close();
+  }
+}
+async function readFile() {
+  try {
+    const dir = await root.getDirectoryHandle(monthDir(date));
+    const fh = await dir.getFileHandle(fileName(date));
+    return await (await fh.getFile()).text();
+  } catch { return null; }
+}
+
+// ---------- 화면 ----------
+const draftKey = () => `diary:${iso(date)}:${mode}`;
+function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+
+function grow(ta) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+
+async function type(el, text, token, speed = 38) {
+  el.textContent = ""; el.classList.add("caret");
+  for (const ch of text) {
+    if (token !== typingToken) return false;
+    el.textContent += ch;
+    await new Promise(r => setTimeout(r, speed));
+  }
+  el.classList.remove("caret");
+  return true;
+}
+
+function watch(ta) { ta.addEventListener("input", () => { grow(ta); onEdit(); }); return ta; }
+function addItem(s) {
+  const div = document.createElement("div");
+  div.className = "item";
+  div.innerHTML = `<span class="num">${s.querySelectorAll(".item").length + 1}.</span><textarea rows="1" spellcheck="false"></textarea>`;
+  s.querySelector(".more").before(div);
+  return watch(div.querySelector("textarea"));
+}
+function build() {
+  const form = $("#form");
+  form.innerHTML = "";
+  const secs = [];
+  for (const { h, q } of QUESTIONS[mode]) {
+    const s = document.createElement("section");
+    s.className = "q fade"; s.dataset.h = h;
+    s.innerHTML = `<h2></h2><button type="button" class="more">+ 하나 더</button>`;
+    s.querySelector("h2").dataset.text = q;
+    for (let i = 0; i < COUNT; i++) addItem(s);
+    s.querySelector(".more").onclick = () => addItem(s).focus();
+    form.append(s); secs.push(s);
+  }
+  const m = document.createElement("section");
+  m.className = "q fade"; m.dataset.h = MEMO;
+  m.innerHTML = `<h2></h2><textarea class="memo" spellcheck="false" placeholder="자유롭게 아무거나"></textarea>`;
+  m.querySelector("h2").dataset.text = "메모";
+  watch(m.querySelector("textarea"));
+  form.append(m); secs.push(m);
+  return secs;
+}
+
+function fill(data) {
+  for (const s of document.querySelectorAll("#form section")) {
+    const v = data[s.dataset.h];
+    if (s.dataset.h === MEMO) s.querySelector("textarea").value = v || "";
+    else {
+      // 3개보다 많이 쓴 날은 칸을 늘려서 다 보여 준다
+      while (v && s.querySelectorAll(".item").length < v.length) addItem(s);
+      s.querySelectorAll(".item textarea").forEach((ta, i) => ta.value = (v && v[i]) || "");
+    }
+    s.querySelectorAll("textarea").forEach(grow);
+  }
+}
+function collect() {
+  const out = {};
+  for (const s of document.querySelectorAll("#form section")) {
+    const tas = [...s.querySelectorAll("textarea")];
+    out[s.dataset.h] = s.dataset.h === MEMO ? tas[0].value.trim() : tas.map(t => t.value.trim()).filter(Boolean);
+  }
+  return out;
+}
+
+let draftTimer;
+function onEdit() {
+  dirty = true;
+  setStatus("저장 안 됨");
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => store(draftKey(), JSON.stringify(collect())), 400);
+}
+function setStatus(t, err) { const s = $("#status"); s.textContent = t; s.classList.toggle("err", !!err); }
+
+async function render() {
+  const token = ++typingToken;
+  document.body.classList.toggle("evening", mode === "evening");
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.mode === mode));
+  $("#dateLabel").textContent = korDate(date);
+  $("#dateInput").value = iso(date);
+  showFolder();
+  const secs = build();
+
+  // 쓰다 만 내용이 있으면 그것부터, 없으면 이미 저장된 파일에서 불러온다.
+  const draft = load(draftKey());
+  dirty = false;
+  if (draft) {
+    fill(JSON.parse(draft)); dirty = true; setStatus("저장 안 한 내용을 불러왔어요");
+  } else if (root && await hasPermission(false)) {
+    const text = await readFile();
+    if (token !== typingToken) return;
+    fill(text ? parse(text) : {});
+    setStatus(text ? "저장된 일기를 불러왔어요" : "");
+  } else {
+    fill({}); setStatus(root ? "저장할 때 폴더 접근을 한 번 더 허락해 주세요" : "");
+  }
+
+  // 질문이 한 글자씩 써지는 연출
+  if (!await type($("#greet"), GREET[mode], token, 45)) return;
+  for (const s of secs) {
+    if (token !== typingToken) return;
+    s.classList.add("in");
+    const h2 = s.querySelector("h2");
+    if (!await type(h2, h2.dataset.text, token)) return;
+    if (s === secs[0]) {
+      const first = [...document.querySelectorAll("#form textarea")].find(t => !t.value) || s.querySelector("textarea");
+      first.focus();
+    }
+  }
+}
+
+async function save() {
+  const answers = collect();
+  if (!window.showDirectoryPicker) {
+    // 폴더에 직접 쓰지 못하는 브라우저: 파일로 내려받기
+    const blob = new Blob([apply(skeleton(date), answers)], { type: "text/markdown" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: fileName(date) });
+    a.click(); URL.revokeObjectURL(a.href);
+    setStatus("이 브라우저는 폴더에 바로 저장을 못 해서 파일로 내려받았어요. Chrome이나 Edge를 쓰면 바로 저장돼요.", true);
+    return;
+  }
+  try {
+    if (!root && !await pickFolder()) return setStatus("폴더를 골라야 저장할 수 있어요", true);
+    if (!await hasPermission(true)) return setStatus("폴더 접근이 허락되지 않았어요", true);
+    const dir = await root.getDirectoryHandle(monthDir(date), { create: true });
+    const text = ensureNav(apply((await readFile()) ?? skeleton(date), answers), date);
+    await ensureNote(dir, `${monthDir(date)}.md`, `---\ntags:\n  - month\n---\n# ${date.getFullYear()}년 ${date.getMonth() + 1}월\n`);
+    for (const t of TOPICS) await ensureNote(root, `${t}.md`, `# ${t}\n`);
+    const fh = await dir.getFileHandle(fileName(date), { create: true });
+    const w = await fh.createWritable();
+    await w.write(text); await w.close();
+    clearTimeout(draftTimer);
+    store(draftKey(), null);
+    dirty = false;
+    const now = new Date();
+    setStatus(`${pad(now.getHours())}:${pad(now.getMinutes())}에 저장했어요`);
+    const st = $("#stamp"); st.classList.add("show"); setTimeout(() => st.classList.remove("show"), 1400);
+  } catch (e) {
+    setStatus("저장 실패: " + e.message, true);
+  }
+}
+
+function setDate(d) { date = new Date(d.getFullYear(), d.getMonth(), d.getDate()); render(); }
+
+// ---------- 시작 ----------
+(async () => {
+  // 새벽 4시 전이면 전날 저녁 일기로, 오후 3시 전이면 아침 일기로 연다.
+  const now = new Date();
+  const h = now.getHours();
+  if (h < 4) { now.setDate(now.getDate() - 1); mode = "evening"; }
+  else mode = h < 15 ? "morning" : "evening";
+  date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  root = (await kv("root")) || null;
+  if (root && isMonthDir(root)) root = null;  // 예전에 달 폴더를 골라 둔 경우 다시 고르게 한다
+
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { if (mode !== b.dataset.mode) { mode = b.dataset.mode; render(); } });
+  $("#prev").onclick = () => setDate(new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1));
+  $("#next").onclick = () => setDate(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1));
+  $("#dateLabel").onclick = () => { try { $("#dateInput").showPicker(); } catch { $("#dateInput").focus(); } };
+  $("#dateInput").onchange = e => { if (e.target.value) { const [y, m, d] = e.target.value.split("-").map(Number); setDate(new Date(y, m - 1, d)); } };
+  $("#pick").onclick = async () => { if (await pickFolder()) render(); };
+  $("#save").onclick = save;
+  addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); } });
+  addEventListener("beforeunload", e => { if (dirty) e.preventDefault(); });
+  if (!window.showDirectoryPicker) $("#pick").hidden = true;
+  render();
+})();
+</script>
+</body>
+</html>
